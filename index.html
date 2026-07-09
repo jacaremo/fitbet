@@ -260,15 +260,51 @@ async function startCamera() {
       }
     } catch (permCheckErr) { /* API pode não suportar 'camera' em alguns navegadores; ignorar */ }
   }
+ try {
+  // Tenta abrir a câmera traseira
   try {
-    // Em muitos celulares, constraint 'exact'/'user' rígida falha (OverconstrainedError).
-    // Tentamos com 'ideal' primeiro e caímos para uma constraint genérica se preciso.
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: {
+          exact: "environment"
+        }
+      },
+      audio: false
+    });
+
+  } catch (err1) {
+
+    // Se o navegador não aceitar "exact", tenta "ideal"
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' } }, audio: false });
-    } catch (innerErr) {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: "environment"
+          },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      });
+
+    } catch (err2) {
+
+      // Último recurso: qualquer câmera disponível
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+
     }
-    video.srcObject = mediaStream;
+
+  }
+
+  video.srcObject = mediaStream;
+  video.muted = true;
+  video.autoplay = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     try {
